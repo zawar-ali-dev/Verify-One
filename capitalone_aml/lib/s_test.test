@@ -1,0 +1,59 @@
+import 'package:encrypt/encrypt.dart';
+import 'package:encrypt/encrypt_io.dart';
+
+import 'package:pointycastle/asymmetric/api.dart';
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+
+void main() async {
+    final publicKey = await parseKeyFromFile<RSAPublicKey>('test/public.pem');
+    final privKey = await parseKeyFromFile<RSAPrivateKey>('test/private.pem');
+    final encrypter = Encrypter(RSA(publicKey: publicKey, privateKey: privKey));
+
+    session = initSesh();
+
+    print(session);
+}
+
+
+Future<http.Response> initSesh() {
+    final response = await http.get(Uri.parse('https://aml.unioutlet.co.uk/init'));
+
+    if (response.statusCode == 200) {
+        // If the server did return a 200 OK response,
+        // then parse the JSON.
+        return serverSession.fromJson(jsonDecode(response.body));
+    } else {
+        // If the server did not return a 200 OK response,
+        // then throw an exception.
+        throw Exception('Failed to load album');
+    }
+}
+   
+
+class serverSession{
+    final String session_id;
+    final String publicKey;
+    final String privateKey;
+    final String server_public_key;
+    String state;
+
+    serverSession(
+        required this.publicKey,
+        required this.privateKey,
+    );
+
+    factory serverSession.fromJson(Map<String, dynamic> json) {
+    return serverSession(
+      session_id: json['session_id'],
+      server_public_key: json['public_key'],
+      state: "init",
+    );
+  }
+    
+}
+
